@@ -1,0 +1,7 @@
+*.log
+dot.json
+_*.json
+env
+supy_folder
+logger
+__pycache__

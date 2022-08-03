@@ -1,0 +1,27 @@
+{
+    "prefix": "/",
+    "description": "Put Bot description here",
+    "authors": [
+        {
+            "name": "Supreme",
+            "url": "https://github.com/real-supreme"
+        }
+    ],
+    "activity": {
+        "playing": [
+            "with your feelings"
+        ],
+        "listening": [
+            "some jams",
+            "loud music"
+        ],
+        "watching": [
+            "your words"
+        ],
+        "streaming": [
+            "your bedroom"
+        ]
+    },
+    "mode": "online",
+    "license": "MIT"
+}

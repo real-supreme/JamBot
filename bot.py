@@ -6,11 +6,6 @@ import os, traceback, random
 from logger import log
  
 CONNECT = False
-
-class _JamDotBot(Bot):
-    def __init__(self,*args, **options):
-        super().__init__(command_prefix=when_mentioned_or(config.get_prefix()), *args, **options)
-        ...
         
 class JamDotBot(discord.bot.Bot):
     def __init__(self, *args, **options):
@@ -72,7 +67,7 @@ class JamDotBot(discord.bot.Bot):
         
 if __name__=='__main__':
     print("Running Bot")
-    bot = _JamDotBot()
+    bot = JamDotBot()
     try:
         log.info("Starting bot...")
         bot.run(config.get_token())

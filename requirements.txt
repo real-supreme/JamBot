@@ -1,1 +1,3 @@
-pycord  
+pycord
+opencv-python
+Pillow

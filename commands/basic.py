@@ -1,9 +1,9 @@
-from discord import Cog, commands
+from discord import cog, commands
 from discord import Option
 from logger import log
+from Utils.metautils import send
 
-class Basic(Cog):
-
+class Basic(cog.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -11,12 +11,11 @@ class Basic(Cog):
     async def hey(self, ctx):
         # expensive
         # out
-        try:
-            ctx.respond("Hello!")
-        except:
-            ctx.reply("Hello!")
+        print("hi")
+        await send(ctx, "Hello!")
             
 def setup(bot):
     bot.add_cog(Basic(bot))
     log.debug("Basic Cog Loaded")
+    print("Basic Cog Loaded")
     return Basic(bot)

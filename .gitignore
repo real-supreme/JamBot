@@ -1,7 +1,8 @@
 *.log
 dot.json
-_*.json
+_*
 env
 supy_folder
 logger
 __pycache__
+*test.py

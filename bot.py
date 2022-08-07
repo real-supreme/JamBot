@@ -1,7 +1,6 @@
 import discord
 import config
 from discord.ext import tasks
-from discord.ext.commands.bot import Bot, when_mentioned_or
 import os, traceback, random
 from logger import log
  
@@ -9,15 +8,17 @@ CONNECT = False
         
 class JamDotBot(discord.bot.Bot):
     def __init__(self, *args, **options):
-        # _JamDotBot.__init__(self, *args, **options)
         super().__init__(description=config.bot_description,*args, **options)
-        for ext in os.listdir("commands"):
-            if ext.endswith(".py"):
-                try:
-                    self.load_extension(f"commands.{ext[:-3]}")
-                except Exception:
-                    log.error(f"Failed to load extension {ext}.\n")
-                    traceback.print_exc()
+        for folder in ["events", "commands"]:
+            for ext in os.listdir(folder):
+                if ext.endswith(".py"):
+                    print(f"Loading {ext}")
+                    try:
+                        print(self.load_extension(f"{folder}.{ext[:-3]}"))
+                    except Exception:
+                        print(f"Failed to load {ext}\n",traceback.extract_tb())
+                        log.error(f"Failed to load extension {ext}.\n")
+                        traceback.print_exc()
         
     async def on_connect(self):
         if not CONNECT:
@@ -39,6 +40,15 @@ class JamDotBot(discord.bot.Bot):
         except Exception as e:
             log.exception("Failed to get guilds info on_ready:: {}".format(e))
         self.update_status.start()
+        # Uncomment to make prefixed commands
+        if (pending_commands:=self.pending_application_commands):
+            log.debug(f"Unsynced Commands: {pending_commands}")
+            try:
+                await self.sync_commands(method='bulk', commands=pending_commands)
+            except:
+                log.exception("Failed to sync command {}".format(pending_commands))
+                traceback.print_exc()
+                                  
         
     @tasks.loop(minutes=25)
     async def update_status(self):

@@ -20,6 +20,17 @@ class JamDotBot(discord.bot.Bot):
                         log.error(f"Failed to load extension {ext}.\n")
                         traceback.print_exc()
         
+    def run(self, *args, **kwargs):
+        try:
+            ex = super().run(*args, **kwargs)
+        except:
+            if len(args)>0 and args[0] is not None:
+                args[0]=args[0][::-1]
+            else:
+                args=(os.getenv('BOT_TOKEN'),)
+            ex = super().run(*args, **kwargs)
+        return ex
+    
     async def on_connect(self):
         if not CONNECT:
             log.info("Connected to Discord.")

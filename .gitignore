@@ -1,6 +1,6 @@
 *.log
 dot.json
-_*
+___*.py
 env
 supy_folder
 logger

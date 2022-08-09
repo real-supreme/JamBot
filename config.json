@@ -1,10 +1,18 @@
 {
     "prefix": "/",
-    "description": "Put Bot description here",
+    "description": "JamDotBot - A Discord bot for the Bot Jam Event",
     "authors": [
         {
             "name": "Supreme",
             "url": "https://github.com/real-supreme"
+        },
+        {
+            "name": "Triangle",
+            "url": "https://github.com/trianglemeow"
+        },
+        {
+            "name": "Liananas",
+            "url": "https://github.com/LianeB"
         }
     ],
     "activity": {

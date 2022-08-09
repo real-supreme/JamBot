@@ -8,3 +8,4 @@ __pycache__
 *test.py
 *.png
 *.gif
+data.txt

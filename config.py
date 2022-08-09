@@ -7,6 +7,7 @@ bot_description = config['description']
 default_prefix = config['prefix']
 status = config['mode']
 bot_activity = config['activity']
+db_path = config['db_path']
 STD_LOG_FORMAT = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s')
     
 def get_prefix():

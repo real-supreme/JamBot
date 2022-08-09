@@ -10,12 +10,12 @@ class DB(BaseDB):
         if db_name!=db_path:
             StartupDB(db_name).run()
         super().__init__(db_name)
-       
+    
     async def add_banned_word(self, guild_id:int, word:list, punish:str):
         try:
             words = list(await self.get_all_banned_words(guild_id))
             word = " ".join(set(words+word))
-            await self.execute("INSERT INTO BanWords(guild_id, words, punish) VALUES(?, ?, ?)", guild_id, words,punish)
+            await self.execute("INSERT INTO BanWords(guild_id, words, punish) VALUES(?, ?, ?)", guild_id, words, punish)
         except Exception as e:
             log.exception(e)
             raise DB_Error(args=e)
@@ -39,7 +39,9 @@ class DB(BaseDB):
     async def get_all_banned_words(self, guild_id):
         try:
             await self.execute("SELECT words FROM BanWords WHERE guild_id=?", guild_id)
-            return await self.fetchone()[0].split(" ")
+            words = await self.fetchone()[0]
+            words = words.split(" ")
+            return words
         except Exception as e:
             log.exception(e)
             raise DB_Error(args=e)

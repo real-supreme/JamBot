@@ -31,5 +31,6 @@
         ]
     },
     "mode": "online",
-    "license": "MIT"
+    "license": "MIT",
+    "db_path": "../../sqlite-tools-win32-x86-3390200/jamdot.db"
 }

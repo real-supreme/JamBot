@@ -3,6 +3,7 @@ import config
 from discord.ext import tasks
 import os, traceback, random
 from logger import log
+from Database.startup import StartupDB
  
 CONNECT = False
         

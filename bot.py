@@ -9,7 +9,7 @@ CONNECT = False
 class JamDotBot(discord.bot.Bot):
     def __init__(self, *args, **options):
         super().__init__(description=config.bot_description,*args, **options)
-        for folder in ["events", "commands"]:
+        for folder in ["src/events", "src/commands"]:
             for ext in os.listdir(folder):
                 if ext.endswith(".py"):
                     print(f"Loading {ext}")

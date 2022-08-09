@@ -88,7 +88,8 @@ class JamDotBot(discord.bot.Bot):
         
 if __name__=='__main__':
     print("Running Bot")
-    bot = JamDotBot()
+    intents = discord.Intents.all()
+    bot = JamDotBot(intents=intents)
     try:
         log.info("Starting bot...")
         bot.run(config.get_token())

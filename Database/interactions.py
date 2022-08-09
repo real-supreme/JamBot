@@ -11,15 +11,30 @@ class DB(BaseDB):
             StartupDB(db_name).run()
         super().__init__(db_name)
        
-    async def add_banned_word(self, guild_id:int, word:list):
+    async def add_banned_word(self, guild_id:int, word:list, punish:str):
         try:
             words = list(await self.get_all_banned_words(guild_id))
             word = " ".join(set(words+word))
-            await self.execute("INSERT INTO BanWords(guild_id, words, punish) VALUES(?, ?)", guild_id, words)
+            await self.execute("INSERT INTO BanWords(guild_id, words, punish) VALUES(?, ?, ?)", guild_id, words,punish)
         except Exception as e:
             log.exception(e)
             raise DB_Error(args=e)
-       
+        
+    async def remove_banned_word(self, guild_id:int, word:list):
+        try:
+            bannedwords = list(await self.get_all_banned_words(guild_id))
+            if str(bannedwords) not in word:
+                return True
+            roles.remove(str(role_id))
+            if word:
+                words = " ".join(word)
+                await self.execute("INSERT INTO Whilelist(guild_id, roleid) VALUES(?, ?)", guild_id, word)
+            else:
+                await self.execute("DELETE FROM BanWords WHERE guild_id=?", guild_id)
+        except Exception as e:
+            log.exception(e)
+            raise DB_Error(args=e)
+
     @lru_cache(maxsize=20) 
     async def get_all_banned_words(self, guild_id):
         try:
@@ -30,10 +45,19 @@ class DB(BaseDB):
             raise DB_Error(args=e)
         
     @lru_cache(maxsize=20)
-    async def get_banwords_punishment(self, guild_id):
+    async def get_banwords_punishment(self, guild_id, word):
         try:
-            await self.execute("SELECT punish FROM BanWords WHERE guild_id=?", guild_id)
-            return await self.__filter_punishment(await self.fetchone()[0])
+            await self.execute("SELECT punish FROM BanWords WHERE guild_id=? AND word=?", guild_id, word)
+            return await self.fetchone()[0]
+        except Exception as e:
+            log.exception(e)
+            raise DB_Error(args=e)
+        
+    @lru_cache(maxsize=20)
+    async def check_banned_word(self, guild_id, word):
+        try:
+            await self.execute("SELECT word FROM BanWords WHERE guild_id=? AND word=?", guild_id, word)
+            return True
         except Exception as e:
             log.exception(e)
             raise DB_Error(args=e)

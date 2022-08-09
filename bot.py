@@ -9,14 +9,14 @@ CONNECT = False
 class JamDotBot(discord.bot.Bot):
     def __init__(self, *args, **options):
         super().__init__(description=config.bot_description,*args, **options)
-        for folder in ["src/events", "src/commands"]:
+        for folder in ["events", "commands"]:
             for ext in os.listdir(folder):
                 if ext.endswith(".py"):
                     print(f"Loading {ext}")
                     try:
                         print(self.load_extension(f"{folder}.{ext[:-3]}"))
                     except Exception:
-                        print(f"Failed to load {ext}\n",traceback.extract_tb())
+                        print(f"Failed to load {ext}\n",traceback.extract_tb(null))
                         log.error(f"Failed to load extension {ext}.\n")
                         traceback.print_exc()
         

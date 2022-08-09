@@ -6,3 +6,5 @@ supy_folder
 logger
 __pycache__
 *test.py
+*.png
+*.gif

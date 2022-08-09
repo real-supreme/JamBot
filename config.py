@@ -23,3 +23,14 @@ def get_token():
     with open('dot.json') as dot_file:
         dot = json.load(dot_file)
     return dot['token'][::-1]
+
+
+def base_api_link():
+    with open('dot.json') as dot_file:
+        dot = json.load(dot_file)
+    return dot['base_api_link']
+
+def base_trivia():
+    with open('dot.json') as dot_file:
+        dot = json.load(dot_file)
+    return dot['base_trivia']

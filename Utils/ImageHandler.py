@@ -32,7 +32,9 @@ class BaseImgHandler:
     async def get_image(self, image):
         print(image)
         if isinstance(image, BytesIO):
-            self.image = image.getvalue()
+            self.image = image.getvalue() # gives bytes
+            npr = np.fromstring(self.image, np.uint8)
+            self.image = cv2.imdecode(npr, cv2.IMREAD_COLOR)
         elif isinstance(image, str):
             if self.is_valid_imgURL(image):
                 await self.get_image_from_url(image)
@@ -44,7 +46,7 @@ class BaseImgHandler:
         elif isinstance(image, np.ndarray):
             self.image = image.copy()
         print(self.image, type(self.image), image, type(image))
-        if self.image is None or image is None or self.image.size == 0:
+        if self.image is None or image is None:
             raise TypeError("Image must be a BytesIO, str, or numpy.ndarray")
         self.original_image = self.image.copy()
         
@@ -77,12 +79,15 @@ class BaseImgHandler:
             self.image = cv2.imdecode(image, cv2.IMREAD_COLOR)
             
     async def prepare_to_send(self):
-        if isinstance(self.image, np.ndarray):
+        if isinstance(self.image, bytes):
+            return BytesIO(self.image)
+        if self.image is not None and isinstance(self.image, np.ndarray):
             print(self.image_type)
             cv2.imwrite(f"sending.png", self.image)
-        if self.image is not None and isinstance(self.image, np.ndarray):
-            iob = cv2.imencode('.png',self.image)[1]
+            print("Sending image")
+            _,iob = cv2.imencode('.png',self.image)
             buf = BytesIO(iob)
+            print("iob", iob, _, type(iob), len(iob))
             return buf
     
 class ImageManipulator(BaseImgHandler):
@@ -100,14 +105,17 @@ class ImageManipulator(BaseImgHandler):
         super().set_standby(image)
         
     def __filter_value(self, value):
-        if value <0:
-            value = 0
+        if value <-255:
+            value = -255
         elif value > 255:
             value = 255
         return value
     
     def __percent_factor_value(self, value):
-        return value/(255*0.5)
+        HB= 255
+        value += 255
+        return value/HB
+        
     
     async def brightness(self, value):
         value = self.__filter_value(value)
@@ -129,7 +137,8 @@ class ImageManipulator(BaseImgHandler):
     async def contrast(self, value):
         value = self.__filter_value(value)
         value = self.__percent_factor_value(value)
-        pil_image = Image.fromarray(self.image)
+        print(f"Contrasting image with value {value}")
+        pil_image = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         buf = BytesIO()
         ImageEnhance.Contrast(pil_image).enhance(value).save(buf, format="PNG", quality=self.quality)
         self._buffer_image = self.image
@@ -138,26 +147,25 @@ class ImageManipulator(BaseImgHandler):
     async def sharpness(self, value):
         value = self.__filter_value(value)
         value = self.__percent_factor_value(value)
-        pil_image = Image.fromarray(self.image)
+        pil_image = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
         buf = BytesIO()
         ImageEnhance.Sharpness(pil_image).enhance(value).save(buf, format="PNG", quality=self.quality)
         self._buffer_image = self.image
         self.image = buf.getvalue()
         
     async def saturation(self, value):
-        hsv = cv2.cvtColor(self.image, cv2.COLOR_BGR2HSV)
-        h,s,v = cv2.split(hsv)
         value = self.__filter_value(value)
-        s = cv2.multiply(s, np.full(s.shape, value/255))
-        hsv = cv2.merge((h,s,v))
+        value = self.__percent_factor_value(value)
+        pil_image = Image.fromarray(cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB))
+        buf = BytesIO()
+        ImageEnhance.Color(pil_image).enhance(value).save(buf, format="PNG", quality=self.quality)
         self._buffer_image = self.image
-        self.image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+        self.image = buf.getvalue()
     
     async def smoothen(self, value):
         value = self.__filter_value(value)
-        value = self.__percent_factor_value(value)
         self._buffer_image = self.image
-        self.image = cv2.medianBlur(self.image, value)
+        self.image = cv2.medianBlur(self.image, int(value))
     
     async def kill(self, image=None):
         if image:
@@ -165,25 +173,34 @@ class ImageManipulator(BaseImgHandler):
                 self._buffer_image = self.image
             self.image = image
         try:
-            image = cv2.line(self.image, (0,0), (self.image.shape[1], self.image.shape[0]), (255,0,0), 1)
-            image = cv2.line(image, (0,self.image.shape[0]), (self.image.shape[1], 0), (255,0,0), 1)
+            image = cv2.line(self.image, (0,0), (self.image.shape[1], self.image.shape[0]), (0,0,255), 5)
+            image = cv2.line(image, (0,self.image.shape[0]), (self.image.shape[1], 0), (0,0,255), 5)
         except Exception as e:
             log.execption(e)
             
-    async def sketchify(self, factor=2):
+    async def sketchify(self):
         self._buffer_image = self.image
-        self.smoothen(factor*2*255)
         gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        gray = cv2.drawContours(gray, [gray], -1, (255,255,255), 2) # Trial
-        # gray = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2) # Trial
-        ...
-        self.image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-        
+        gray_blur = cv2.GaussianBlur(gray, (25, 25), 0)
+        self.image = cv2.divide(gray, gray_blur, scale=250.0)
+                
     async def cartoonify(self):
-        ...
+        self._buffer_image = self.image
+        gray = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        gray_blur = cv2.medianBlur(gray, 3) 
+        edges = cv2.adaptiveThreshold(gray_blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 9, 9) 
+        color = cv2.detailEnhance(self.image, sigma_s=5, sigma_r=0.5)
+        self.image = cv2.bitwise_and(color, color, mask=edges) 
         
     async def rotate(self, angle=90):
         self._buffer_image = self.image
+        print(f"Rotating image by {angle}\n{type(self.image)}")
+        if angle == 90:
+            angle = cv2.ROTATE_90_CLOCKWISE
+        elif angle == 180:
+            angle = cv2.ROTATE_180
+        elif angle == 270:
+            angle = cv2.ROTATE_90_COUNTERCLOCKWISE
         self.image = cv2.rotate(self.image, angle)
         
     async def resize(self, width=None, height=None):
@@ -197,14 +214,9 @@ class ImageManipulator(BaseImgHandler):
             self.image = cv2.flip(self.image, 1)
         else:
             raise ValueError("Direction must be 'horizontal' or 'vertical'")
-        
-    async def crop(self, width=None, height=None):
-        if width and height:
-            self.image = self.image[:height, :width]
-        elif width:
-            self.image = self.image[:, :width]
-        elif height:
-            self.image = self.image[:height, :]
+            
+    async def invert(self):
+        self.image = cv2.bitwise_not(self.image)
             
 if __name__ == '__main__':
     ...
